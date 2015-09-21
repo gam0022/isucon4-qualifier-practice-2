@@ -19,7 +19,7 @@ var (
 
 func init() {
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
+		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local&interpolateParams=true",
 		getEnv("ISU4_DB_USER", "root"),
 		getEnv("ISU4_DB_PASSWORD", ""),
 		getEnv("ISU4_DB_HOST", "localhost"),
