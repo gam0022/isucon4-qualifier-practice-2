@@ -1,0 +1,8 @@
+#!/bin/sh
+#dir=${GIT_DIR:=$(dirname $0)}
+dir=$(cd $(dirname ${BASH_SOURCE:-$0}); pwd)
+echo "dir: $dir"
+rsync -avzc --delete --exclude-from=rsync-exclude-from ${dir}/ isucon4:webapp
+
+# ssh isucon4 webapp/build.sh
+ssh isucon4 'cd webapp/go;./build.sh'

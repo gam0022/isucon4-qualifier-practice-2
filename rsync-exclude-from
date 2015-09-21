@@ -1,0 +1,13 @@
+# .gitignore
+node/*
+perl/*
+php/*
+python/*
+ruby/*
+
+go/golang-webapp
+.swo
+*.swp
+
+# add
+.git/*
