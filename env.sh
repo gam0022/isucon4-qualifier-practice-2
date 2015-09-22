@@ -20,4 +20,7 @@ export ISU4_DB_USER=isucon
 export ISU4_DB_PASSWORD=isucon
 export ISU4_DB_NAME=isu4_qualifier
 
+# http://dsas.blog.klab.org/archives/52171878.html
+export  MARTINI_ENV="production"
+
 exec $*
