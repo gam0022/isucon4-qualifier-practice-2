@@ -7,3 +7,6 @@ ruby/*
 go/golang-webapp
 .swo
 *.swp
+
+.idea
+*.iml
