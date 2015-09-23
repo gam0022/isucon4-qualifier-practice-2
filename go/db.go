@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 	"sync"
+    "sync/atomic"
 )
 
 var (
@@ -16,19 +17,18 @@ var (
 
 
 	m                = new(sync.Mutex)
-	UserIdFailures   = make([]int, 200001, 200001)
+	UserIdFailures   = make([]int64, 200001, 200001)
 )
 
 func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error {
 	succ := 0
-	m.Lock()
 
 	if user != nil {
 		if succeeded {
-			UserIdFailures[user.ID] = 0
+			atomic.StoreInt64(&UserIdFailures[user.ID], 0)
 			succ = 1
 		} else {
-			UserIdFailures[user.ID]++
+			atomic.AddInt64(&UserIdFailures[user.ID], 1)
 		}
 	}
 
@@ -44,8 +44,6 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 		time.Now(), userId, login, remoteAddr, succ,
 	)
 
-	m.Unlock()
-
 	return err
 }
 
@@ -54,7 +52,7 @@ func isLockedUser(user *User) (bool, error) {
 		return false, nil
 	}
 
-	return UserLockThreshold <= UserIdFailures[user.ID], nil
+	return int64(UserLockThreshold) <= atomic.LoadInt64(&UserIdFailures[user.ID]), nil
 }
 
 func isBannedIP(ip string) (bool, error) {
