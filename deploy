@@ -1,5 +1,4 @@
 #!/bin/sh
-#dir=${GIT_DIR:=$(dirname $0)}
 dir=$(cd $(dirname ${BASH_SOURCE:-$0}); pwd)
 echo "dir: $dir"
 
@@ -7,5 +6,20 @@ ssh_host="isucon4"
 
 rsync -avzc --delete --exclude-from=rsync-exclude-from ${dir}/ ${ssh_host}:webapp
 
-ssh -t $ssh_host "cd webapp/go; ./build.sh"
-ssh -t $ssh_host "sudo supervisorctl stop isucon_go; sudo rm /tmp/go.sock; sudo supervisorctl start isucon_go; sudo chown nginx:nginx /tmp/go.sock"
+ssh -t -t $ssh_host <<-EOS
+  cd /home/isucon/webapp/go
+  /home/isucon/env.sh /home/isucon/webapp/go/build.sh
+
+  # sudo sysctl -p
+  # sudo service mysqld restart
+  sudo service supervisord reload
+
+  sudo service nginx stop
+  sudo supervisorctl stop isucon_go
+  sudo rm -f /tmp/go.sock
+  sudo supervisorctl start isucon_go
+  sudo chown nginx:nginx /tmp/go.sock
+  sudo service nginx start
+
+  exit
+EOS
