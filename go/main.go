@@ -49,6 +49,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	//for id := 195001; id <= USERS_ID_MAX; id++ {
+	//	UserIdFailures[id] = isLockedUserSQL(id)
+	//	fmt.Printf("%d: %d, ", id, UserIdFailures[id])
+	//}
 }
 
 func main() {
