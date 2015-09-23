@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"time"
-	"sync"
 )
 
 var (
@@ -15,14 +14,11 @@ var (
 	ErrWrongPassword = errors.New("Wrong password")
 
 
-	m                = new(sync.Mutex)
 	UserIdFailures   = make([]int, 200001, 200001)
 )
 
 func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error {
 	succ := 0
-	m.Lock()
-
 	if user != nil {
 		if succeeded {
 			UserIdFailures[user.ID] = 0
@@ -43,8 +39,6 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 			"VALUES (?,?,?,?,?)",
 		time.Now(), userId, login, remoteAddr, succ,
 	)
-
-	m.Unlock()
 
 	return err
 }
