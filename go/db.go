@@ -12,12 +12,20 @@ var (
 	ErrLockedUser    = errors.New("Locked user")
 	ErrUserNotFound  = errors.New("Not found user")
 	ErrWrongPassword = errors.New("Wrong password")
+
+
+	UserIdFailures   = make([]int, 200001, 200001)
 )
 
 func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error {
 	succ := 0
-	if succeeded {
-		succ = 1
+	if user != nil {
+		if succeeded {
+			UserIdFailures[user.ID] = 0
+			succ = 1
+		} else {
+			UserIdFailures[user.ID]++
+		}
 	}
 
 	var userId sql.NullInt64
@@ -40,23 +48,7 @@ func isLockedUser(user *User) (bool, error) {
 		return false, nil
 	}
 
-	var ni sql.NullInt64
-	row := db.QueryRow(
-		"SELECT COUNT(1) AS failures FROM login_log WHERE "+
-			"user_id = ? AND id > IFNULL((select id from login_log where user_id = ? AND "+
-			"succeeded = 1 ORDER BY id DESC LIMIT 1), 0);",
-		user.ID, user.ID,
-	)
-	err := row.Scan(&ni)
-
-	switch {
-	case err == sql.ErrNoRows:
-		return false, nil
-	case err != nil:
-		return false, err
-	}
-
-	return UserLockThreshold <= int(ni.Int64), nil
+	return UserLockThreshold <= UserIdFailures[user.ID], nil
 }
 
 func isBannedIP(ip string) (bool, error) {
