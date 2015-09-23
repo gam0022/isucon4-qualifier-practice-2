@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-const USERS_ID_MAX = 200000
-
 var (
 	ErrBannedIP      = errors.New("Banned IP")
 	ErrLockedUser    = errors.New("Locked user")
@@ -21,9 +19,11 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 	if user != nil {
 		if succeeded {
 			UserIdFailures[user.ID] = 0
+			IpFailtures[remoteAddr] = 0
 			succ = 1
 		} else {
 			UserIdFailures[user.ID]++
+			IpFailtures[remoteAddr]++
 		}
 	}
 
@@ -42,26 +42,6 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 	return err
 }
 
-func isLockedUserSQL(userID int) (int) {
-	var ni sql.NullInt64
-	row := db.QueryRow(
-		"SELECT COUNT(1) AS failures FROM login_log WHERE "+
-			"user_id = ? AND id > IFNULL((select id from login_log where user_id = ? AND "+
-			"succeeded = 1 ORDER BY id DESC LIMIT 1), 0);",
-		userID, userID,
-	)
-	err := row.Scan(&ni)
-
-	switch {
-	case err == sql.ErrNoRows:
-		return 0
-	case err != nil:
-		return 0
-	}
-
-	return int(ni.Int64)
-}
-
 func isLockedUser(user *User) (bool, error) {
 	if user == nil {
 		return false, nil
@@ -71,23 +51,7 @@ func isLockedUser(user *User) (bool, error) {
 }
 
 func isBannedIP(ip string) (bool, error) {
-	var ni sql.NullInt64
-	row := db.QueryRow(
-		"SELECT COUNT(1) AS failures FROM login_log WHERE "+
-			"ip = ? AND id > IFNULL((select id from login_log where ip = ? AND "+
-			"succeeded = 1 ORDER BY id DESC LIMIT 1), 0);",
-		ip, ip,
-	)
-	err := row.Scan(&ni)
-
-	switch {
-	case err == sql.ErrNoRows:
-		return false, nil
-	case err != nil:
-		return false, err
-	}
-
-	return IPBanThreshold <= int(ni.Int64), nil
+	return IPBanThreshold <= IpFailtures[ip], nil
 }
 
 func attemptLogin(req *http.Request) (*User, error) {
