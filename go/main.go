@@ -93,9 +93,10 @@ func main() {
 	})
 
 	m.Get("/mypage", func(r render.Render, session sessions.Session) {
-		currentUser := getCurrentUser(session.Get("user_id"))
+		id,err := strconv.Atoi(session.Get("user_id").(string))
+		currentUser := &User{ID: id}
 
-		if currentUser == nil {
+		if err != nil {
 			//session.Set("notice", "You must be logged in")
 			r.Redirect("/?err=invalid")
 			return
