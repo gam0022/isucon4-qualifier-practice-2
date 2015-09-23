@@ -9,6 +9,12 @@ import (
 	"github.com/martini-contrib/sessions"
 	"net/http"
 	"strconv"
+
+  "net"
+  "os"
+  "os/signal"
+  "syscall"
+  "log"
 )
 
 var db *sql.DB
@@ -103,5 +109,25 @@ func main() {
 		})
 	})
 
-	http.ListenAndServe(":8080", m)
+  // UNIX domain socket
+  // http://lxyuma.hatenablog.com/entry/2014/09/28/230537
+	// http.ListenAndServe(":8080", m)
+  l,err := net.Listen("unix", "/tmp/go.sock")
+  if err != nil {
+    fmt.Printf("%s\n", err)
+    return
+  }
+  sigc := make(chan os.Signal, 1)
+  signal.Notify(sigc, os.Interrupt, os.Kill, syscall.SIGTERM)
+  go func(c chan os.Signal){
+    sig := <-c
+    log.Printf("Caught signal %s: shutting down.", sig)
+    l.Close()
+    os.Exit(0)
+  }(sigc)
+
+  err = http.Serve(l, m)
+  if err != nil {
+    panic(err)
+  }
 }
