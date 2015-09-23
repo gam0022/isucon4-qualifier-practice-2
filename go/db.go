@@ -5,6 +5,11 @@ import (
 	"errors"
 	"net/http"
 	"time"
+	"fmt"
+	"log"
+
+	"io/ioutil"
+    "os"
 )
 
 var (
@@ -40,6 +45,9 @@ func isLockedUser(user *User) (bool, error) {
 		return false, nil
 	}
 
+	content := []byte("go-test\n")
+	ioutil.WriteFile("/tmp/go-test", content, os.ModePerm)
+
 	var ni sql.NullInt64
 	row := db.QueryRow(
 		"SELECT COUNT(1) AS failures FROM login_log WHERE "+
@@ -51,6 +59,20 @@ func isLockedUser(user *User) (bool, error) {
 
 	switch {
 	case err == sql.ErrNoRows:
+		if user != nil {
+			fmt.Printf("sql.ErrNoRows	user_id:%d\n", user.ID)
+			log.Printf("sql.ErrNoRows	user_id:%d\n", user.ID)
+
+			content := []byte("sql.ErrNoRows	user_id:\n")
+			ioutil.WriteFile("/tmp/go-file", content, os.ModePerm)
+
+		} else {
+			fmt.Printf("sql.ErrNoRows	user_id:NULL\n")
+			log.Printf("sql.ErrNoRows	user_id:NULL\n")
+			content := []byte("sql.ErrNoRows	user_id:NULL\n")
+			ioutil.WriteFile("/tmp/go-file", content, os.ModePerm)
+
+		}
 		return false, nil
 	case err != nil:
 		return false, err
