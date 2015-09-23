@@ -15,6 +15,7 @@ ssh -t -t $ssh_host <<-EOS
   sudo service supervisord reload
 
   sudo service nginx stop
+  sudo mv /var/log/nginx/access.log /var/log/nginx/access-$(date '+%F-%T').log
   sudo supervisorctl stop isucon_go
   sudo rm -f /tmp/go.sock
   sudo supervisorctl start isucon_go
