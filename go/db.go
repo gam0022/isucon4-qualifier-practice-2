@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const USERS_ID_MAX = 200000
+
 var (
 	ErrBannedIP      = errors.New("Banned IP")
 	ErrLockedUser    = errors.New("Locked user")
@@ -14,8 +16,14 @@ var (
 	ErrWrongPassword = errors.New("Wrong password")
 
 
-	UserIdFailures   = make(map[int]int, 200000)
+	UserIdFailures   = make(map[int]int, USERS_ID_MAX)
 )
+
+func init() {
+	for id := 1; id <= USERS_ID_MAX; id++ {
+		UserIdFailures[id] = isLockedUserSQL(id)
+	}
+}
 
 func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error {
 	succ := 0
@@ -41,6 +49,26 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 	)
 
 	return err
+}
+
+func isLockedUserSQL(userID int) (bool, error) {
+	var ni sql.NullInt64
+	row := db.QueryRow(
+		"SELECT COUNT(1) AS failures FROM login_log WHERE "+
+			"user_id = ? AND id > IFNULL((select id from login_log where user_id = ? AND "+
+			"succeeded = 1 ORDER BY id DESC LIMIT 1), 0);",
+		userID, userID,
+	)
+	err := row.Scan(&ni)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return false, nil
+	case err != nil:
+		return false, err
+	}
+
+	return UserLockThreshold <= int(ni.Int64), nil
 }
 
 func isLockedUser(user *User) (bool, error) {
