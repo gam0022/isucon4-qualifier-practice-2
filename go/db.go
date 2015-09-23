@@ -14,7 +14,7 @@ var (
 	ErrWrongPassword = errors.New("Wrong password")
 
 
-	UserIdFailures   = make([]int, 200001, 200001)
+	UserIdFailures   = make(map[int]int, 200000)
 )
 
 func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error {
