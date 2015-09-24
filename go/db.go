@@ -94,20 +94,20 @@ func attemptLogin(req *http.Request) (*User, error) {
 		return nil, err
 	}
 
-	if banned, _ := isBannedIP(remoteAddr); banned {
-		return nil, ErrBannedIP
-	}
-
-	if locked, _ := isLockedUser(user); locked {
-		return nil, ErrLockedUser
-	}
-
 	if user == nil {
 		return nil, ErrUserNotFound
 	}
 
 	if user.PasswordHash != calcPassHash(password, user.Salt) {
 		return nil, ErrWrongPassword
+	}
+
+	if banned, _ := isBannedIP(remoteAddr); banned {
+		return nil, ErrBannedIP
+	}
+
+	if locked, _ := isLockedUser(user); locked {
+		return nil, ErrLockedUser
 	}
 
 	succeeded = true
