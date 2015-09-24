@@ -94,7 +94,6 @@ func main() {
 
 	m.Get("/mypage", func(r render.Render, session sessions.Session) {
 		id,err := strconv.Atoi(session.Get("user_id").(string))
-		currentUser := &User{ID: id}
 
 		if err != nil {
 			//session.Set("notice", "You must be logged in")
@@ -102,8 +101,8 @@ func main() {
 			return
 		}
 
-		currentUser.getLastLogin()
-		r.HTML(200, "mypage", currentUser)
+		lastLogin := GetLastLogin(id)
+		r.HTML(200, "mypage", lastLogin)
 	})
 
 	m.Get("/report", func(r render.Render) {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"time"
 )
 
 type User struct {
@@ -9,25 +8,19 @@ type User struct {
 	Login        string
 	PasswordHash string
 	Salt         string
-
-	LastLogin *LastLogin
 }
 
 type LastLogin struct {
 	Login     string
 	IP        string
-	CreatedAt time.Time
+	CreatedAt string
 }
 
-var LastLoginHistory = map[int][2]LastLogin{}
-
-func (u *User) getLastLogin() *LastLogin {
-	userID := u.ID
-	if LastLoginHistory[userID] == nil {
-		return nil
-	} else if LastLoginHistory[userID][1] != nil {
-		return LastLoginHistory[userID][1]
+func GetLastLogin(userID int) *LastLogin {
+	pair := LastLoginHistory[userID]
+	if pair[1].IP != "" {
+		return &pair[1]
 	} else {
-		return LastLoginHistory[userID][0]
+		return &pair[0]
 	}
 }

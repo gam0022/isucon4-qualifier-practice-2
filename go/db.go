@@ -19,23 +19,31 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 	now := time.Now()
 	if user != nil {
 		if succeeded {
+			succ = 1
+
 			UserIdFailures[user.ID] = 0
 			IpFailtures[remoteAddr] = 0
-			if LastLoginHistory[user.ID] == nil {
-				LastLoginHistory[user.ID] = [2]LastLogin{&LastLogin{
-					Login: login,
-					IP: remoteAddr,
-					CreatedAt: now,
-				}}
+
+			now_s := now.Format("2006-01-02 15:04:05")
+			_,ok := LastLoginHistory[user.ID]
+			if !ok {
+				LastLoginHistory[user.ID] = [2]LastLogin{
+					{
+						Login: login,
+						IP: remoteAddr,
+						CreatedAt: now_s,
+					},
+				}
 			} else {
-				LastLoginHistory[user.ID][1] = LastLoginHistory[user.ID][0]
-				LastLoginHistory[user.ID][0] = &LastLogin{
-					Login: login,
-					IP: remoteAddr,
-					CreatedAt: now,
+				LastLoginHistory[user.ID] = [2]LastLogin{
+					{
+						Login: login,
+						IP: remoteAddr,
+						CreatedAt: now_s,
+					},
+					LastLoginHistory[user.ID][0],
 				}
 			}
-			succ = 1
 		} else {
 			UserIdFailures[user.ID]++
 			IpFailtures[remoteAddr]++

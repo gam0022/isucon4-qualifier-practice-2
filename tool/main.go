@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+type LastLogin struct {
+	Login     string
+	IP        string
+	CreatedAt string
+}
+
 const USERS_ID_MAX = 200000
 
 var db *sql.DB
@@ -16,14 +22,8 @@ var (
 
 	UserIdFailures		= map[int]int{}
 	IpFailtures			= map[string]int{}
-	LastLoginHistory	= map[int][2]LastLogin{}
+	LastLoginHistory    = map[int][2]LastLogin{}
 )
-
-type LastLogin struct {
-	Login     string
-	IP        string
-	CreatedAt time.Time
-}
 
 func init() {
 	dsn := fmt.Sprintf(
@@ -122,13 +122,18 @@ func countIpFailures(ip string) (int) {
 }
 
 func initLastLoginHistory() {
+	fmt.Println("LastLoginHistory = map[int][2]LastLogin{")
 	for id := 195001; id <= USERS_ID_MAX; id++ {
-		fmt.Printf("\"%d\": [%s], ", id, getLastLoginHistory(id))
+		lastLogin := getLastLoginHistory(id)
+		fmt.Printf("%d: [2]LastLogin{{Login: \"%s\", IP: \"%s\", CreatedAt: \"%s\"}},", id, lastLogin.Login, lastLogin.IP, lastLogin.CreatedAt)
 	}
+	fmt.Println("}")
 }
 
 func getLastLoginHistory(userID int) (*LastLogin) {
 	lastLogin := &LastLogin{}
+	created_at := &time.Time{}
+
 	rows, err := db.Query(
 		"SELECT login, ip, created_at FROM login_log WHERE succeeded = 1 AND user_id = ? ORDER BY id DESC LIMIT 2",
 		userID,
@@ -140,7 +145,8 @@ func getLastLoginHistory(userID int) (*LastLogin) {
 
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&lastLogin.Login, &lastLogin.IP, &lastLogin.CreatedAt)
+		err = rows.Scan(&lastLogin.Login, &lastLogin.IP, &created_at)
+		lastLogin.CreatedAt = created_at.Format("2006-01-02 15:04:05")
 		if err != nil {
 			return nil
 		}
