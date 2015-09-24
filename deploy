@@ -19,6 +19,7 @@ ssh -t -t $ssh_host <<-EOS
   sudo supervisorctl stop isucon_go
   sudo rm -f /tmp/go.sock
   sudo supervisorctl start isucon_go
+  sudo chown nginx:nginx /dev/shm/nginx/cache
   sudo chown nginx:nginx /tmp/go.sock
   sudo service nginx start
 
