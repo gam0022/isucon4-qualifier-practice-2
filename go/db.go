@@ -53,16 +53,12 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 	return err
 }
 
-func isLockedUser(user *User) (bool, error) {
-	if user == nil {
-		return false, nil
-	}
-
-	return UserLockThreshold <= UserIdFailures[user.ID], nil
+func isLockedUser(user *User) (bool) {
+	return UserLockThreshold <= UserIdFailures[user.ID]
 }
 
-func isBannedIP(ip string) (bool, error) {
-	return IPBanThreshold <= IpFailtures[ip], nil
+func isBannedIP(ip string) (bool) {
+	return IPBanThreshold <= IpFailtures[ip]
 }
 
 func attemptLogin(req *http.Request) (*User, error) {
@@ -94,20 +90,20 @@ func attemptLogin(req *http.Request) (*User, error) {
 		return nil, err
 	}
 
+	if isBannedIP(remoteAddr) {
+		return nil, ErrBannedIP
+	}
+
+	if isLockedUser(user) {
+		return nil, ErrLockedUser
+	}
+
 	if user == nil {
 		return nil, ErrUserNotFound
 	}
 
 	if user.PasswordHash != calcPassHash(password, user.Salt) {
 		return nil, ErrWrongPassword
-	}
-
-	if banned, _ := isBannedIP(remoteAddr); banned {
-		return nil, ErrBannedIP
-	}
-
-	if locked, _ := isLockedUser(user); locked {
-		return nil, ErrLockedUser
 	}
 
 	succeeded = true
