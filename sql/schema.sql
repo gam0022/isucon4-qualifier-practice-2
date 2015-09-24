@@ -11,7 +11,5 @@ CREATE TABLE IF NOT EXISTS `login_log` (
   `user_id` int,
   `login` varchar(255) NOT NULL,
   `ip` varchar(255) NOT NULL,
-  `succeeded` tinyint NOT NULL,
-  index(user_id, succeeded),
-  index(ip, succeeded)
+  `succeeded` tinyint NOT NULL
 ) DEFAULT CHARSET=utf8;
