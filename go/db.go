@@ -24,25 +24,13 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 			UserIdFailures[user.ID] = 0
 			IpFailtures[remoteAddr] = 0
 
-			now_s := now.Format("2006-01-02 15:04:05")
-			_,ok := LastLoginHistory[user.ID]
-			if !ok {
-				LastLoginHistory[user.ID] = [2]LastLogin{
-					{
-						Login: login,
-						IP: remoteAddr,
-						CreatedAt: now_s,
-					},
-				}
-			} else {
-				LastLoginHistory[user.ID] = [2]LastLogin{
-					{
-						Login: login,
-						IP: remoteAddr,
-						CreatedAt: now_s,
-					},
-					LastLoginHistory[user.ID][0],
-				}
+			LastLoginHistory[user.ID] = [2]LastLogin{
+				{
+					Login: login,
+					IP: remoteAddr,
+					CreatedAt: now.Format("2006-01-02 15:04:05"),
+				},
+				LastLoginHistory[user.ID][0],
 			}
 		} else {
 			UserIdFailures[user.ID]++
