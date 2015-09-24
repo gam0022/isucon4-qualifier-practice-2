@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"fmt"
+	"time"
 )
 
 const USERS_ID_MAX = 200000
@@ -13,9 +14,16 @@ var (
 	UserLockThreshold int
 	IPBanThreshold    int
 
-	UserIdFailures    = map[int]int{}
-	IpFailtures       = map[string]int{}
+	UserIdFailures		= map[int]int{}
+	IpFailtures			= map[string]int{}
+	LastLoginHistory	= map[int][2]LastLogin{}
 )
+
+type LastLogin struct {
+	Login     string
+	IP        string
+	CreatedAt time.Time
+}
 
 func init() {
 	dsn := fmt.Sprintf(
@@ -37,7 +45,8 @@ func init() {
 
 func main() {
 	//initUserIdFailures()
-	initIpFailtures()
+	//initIpFailtures()
+	initLastLoginHistory()
 }
 
 func initUserIdFailures() {
@@ -110,4 +119,33 @@ func countIpFailures(ip string) (int) {
 	}
 
 	return int(ni.Int64)
+}
+
+func initLastLoginHistory() {
+	for id := 195001; id <= USERS_ID_MAX; id++ {
+		fmt.Printf("\"%d\": [%s], ", id, getLastLoginHistory(id))
+	}
+}
+
+func getLastLoginHistory(userID int) (*LastLogin) {
+	lastLogin := &LastLogin{}
+	rows, err := db.Query(
+		"SELECT login, ip, created_at FROM login_log WHERE succeeded = 1 AND user_id = ? ORDER BY id DESC LIMIT 2",
+		userID,
+	)
+
+	if err != nil {
+		return nil
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&lastLogin.Login, &lastLogin.IP, &lastLogin.CreatedAt)
+		if err != nil {
+			return nil
+		}
+	}
+
+	return lastLogin
+
 }

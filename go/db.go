@@ -16,10 +16,25 @@ var (
 
 func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error {
 	succ := 0
+	now := time.Now()
 	if user != nil {
 		if succeeded {
 			UserIdFailures[user.ID] = 0
 			IpFailtures[remoteAddr] = 0
+			if LastLoginHistory[user.ID] == nil {
+				LastLoginHistory[user.ID] = [2]LastLogin{&LastLogin{
+					Login: login,
+					IP: remoteAddr,
+					CreatedAt: now,
+				}}
+			} else {
+				LastLoginHistory[user.ID][1] = LastLoginHistory[user.ID][0]
+				LastLoginHistory[user.ID][0] = &LastLogin{
+					Login: login,
+					IP: remoteAddr,
+					CreatedAt: now,
+				}
+			}
 			succ = 1
 		} else {
 			UserIdFailures[user.ID]++
@@ -36,7 +51,7 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 	_, err := db.Exec(
 		"INSERT INTO login_log (`created_at`, `user_id`, `login`, `ip`, `succeeded`) "+
 			"VALUES (?,?,?,?,?)",
-		time.Now(), userId, login, remoteAddr, succ,
+		now, userId, login, remoteAddr, succ,
 	)
 
 	return err
